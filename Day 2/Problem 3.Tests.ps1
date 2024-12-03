@@ -1,4 +1,4 @@
-Describe "CheckLevelChange" -Tag "Functions" {
+Describe "CheckLevelChange" -Tag "Functions","Problem3" {
 	BeforeAll {
 		. ".\Problem 3.ps1"
 	}
@@ -34,7 +34,7 @@ Describe "CheckLevelChange" -Tag "Functions" {
 	}
 }
 
-Describe "CheckReport" -Tag "Functions" {
+Describe "CheckReport" -Tag "Functions","Problem3" {
 	BeforeAll {
 		. ".\Problem 3.ps1"
 	}
@@ -79,12 +79,12 @@ Describe "CheckReport" -Tag "Functions" {
 
 		It "Should mark a report as safe with all changes being 3" {
 			$inputData = "1 4 7 10 13"
-			$results = CheckReport $inputData -Debug -Verbose
+			$results = CheckReport $inputData
 			$results | Should -Be $true
 		}
 	}
 
-	Context "Unsafe Reports" {
+	Context "Unsafe Reports" -Tag "Problem3" {
 		It "Should mark as unsafe if there is no change between two levels" {
 			$inputData = "1 3 3 7 9"
 			$results = CheckReport $inputData
@@ -103,9 +103,13 @@ Describe "CheckReport" -Tag "Functions" {
 			$results | Should -Be $false
 		}
 	}
+
+	Context "Problem Dampener" -Tag "Problem4" {
+		
+	}
 }
 
-Describe "SolveProblem3" {
+Describe "SolveProblem3" -Tag "Problem3" {
 	BeforeAll {
 		. ".\Problem 3.ps1"
 	}

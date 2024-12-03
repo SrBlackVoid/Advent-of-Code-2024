@@ -25,36 +25,65 @@ function CheckReport {
 	[CmdletBinding()]
 	[OutputType([Boolean])]
 	param(
-		$Report
+		$Report,
+		[switch]$DampenerCheck
 	)
 
-	[int[]]$reportLevels = $Report -split " "
-	$changeType = $null
+	$reportLevels = New-Object -TypeName System.Collections.Generic.List[int]
 
-	for ($i = 0; $i -lt ($reportLevels.count - 1); $i++) {
+	$Report -split " " | ForEach-Object {
+		$reportLevels.Add($_)
+	}
+
+	$changeType = $null
+	$problem = $false
+
+	for ($i = 0; $i -lt ($reportLevels.count - 1) -and !$problemIndex; $i++) {
+		Write-Debug "Testing changes between $($reportLevels[$i]) and $($reportLevels[$i+1])"
 		$currentCheck = CheckLevelChange $reportLevels[$i] $reportLevels[$i+1]
 		if ($currentCheck.ChangeType -eq "None") {
-			Write-Verbose "Marking as unsafe: No change detected"
-			return $false
+			$problem = $true
+			break
 		}
 		if ($currentCheck.Change -gt 3) {
-			Write-Verbose "Marking as unsafe: Large change detected"
-			return $false
+			break
 		}
 		if (!$changeType) {
 			$changeType = $currentCheck.ChangeType
 		} elseif ($changeType -ne $currentCheck.ChangeType) {
-			Write-Verbose "Marking as unsafe: change type detected"
+			$problem = $true
+			break
+		}
+	}
+
+	if ($problem) {
+		if ($DampenerCheck) {
 			return $false
 		}
+
+		Write-Debug "Brute-forcing Problem Dampener Checks"
+		for ($i = 0; $i -lt $reportLevels.count; $i++) {
+			$newReport = New-Object -TypeName System.Collections.Generic.List[int]
+
+			$Report -split " " | ForEach-Object {
+				$newReport.Add($_)
+			}
+
+			$newReport.RemoveAt($i)
+			if (CheckReport $newReport -DampenerCheck) {
+				return $true
+			}
+		}
+
+		return $false
 	}
 
 	return $true
 }
 
-function SolveProblem3 {
-	[CmdletBinding()]
+function SolveProblem4 {
 	[OutputType([int])]
+	[CmdletBinding()]
 	param($inputPath)
 
 	$inputData = Get-Content -Path $inputPath
