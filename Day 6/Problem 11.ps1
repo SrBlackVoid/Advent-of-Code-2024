@@ -28,17 +28,16 @@ class Guard {
 		$this.CurrentSpot = $this.GetNextCoordinate()
 	}
 
-	static [hashtable] GetMapSymbolTable() {
-		return @{
-			Up = '^'
-			Down = 'v'
-			Left = '<'
-			Right = '>'
-		}
+	static [hashtable] $MapSymbolTable = @{
+		Up = '^'
+		Down = 'v'
+		Left = '<'
+		Right = '>'
 	}
 
-	[char] GetMapSymbol() {
-		return [Guard]::GetMapSymbolTable.($this.Direction)
+
+	static [char] GetMapSymbol($Direction) {
+		return [Guard]::MapSymbolTable.($Direction)
 	}
 
 	[void] TurnRight() {
@@ -67,7 +66,7 @@ class Lab {
 	Lab([char[][]]$StartingMap) {
 		$this.Map = $StartingMap
 		:GuardSearch for ($i = 0; $i -lt $this.Map.Length; $i++) {
-			foreach ($symbol in [Guard]::GetMapSymbolTable().GetEnumerator()) {
+			foreach ($symbol in [Guard]::MapSymbolTable.GetEnumerator()) {
 				$index = ($this.Map[$i] -join "").IndexOf($symbol.Value)
 				if ($index -ne -1) {
 					$this.Guard = [Guard]::New(@($i,$index),$symbol.Key)
@@ -105,7 +104,7 @@ class Lab {
 		}
 		$this.Guard.MoveForward()
 		$nextCoord = $this.GetGuardPosition()
-		$this.Map[$nextCoord[0]][$nextCoord[1]] = $this.Guard.GetMapSymbol()
+		$this.Map[$nextCoord[0]][$nextCoord[1]] = [Guard]::GetMapSymbol($this.Guard.Direction)
 	}
 
 	[void] GetMapReadout() {
