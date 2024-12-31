@@ -7,16 +7,16 @@ class Guard {
 		"Right"
 	)]
 	[string]$Direction
-	[System.Collections.Generic.HashSet[string]]$TurnList
+	[System.Collections.Generic.HashSet[string]]$MoveList
 
 	Guard([int[]]$coordinate,[string]$startingDirection) {
 		$this.CurrentSpot = $coordinate
 		$this.Direction = $startingDirection
-		$this.TurnList = New-Object -TypeName System.Collections.Generic.HashSet[string]
+		$this.MoveList = New-Object -TypeName System.Collections.Generic.HashSet[string]
 	}
 
-	[bool] UpdateTurnList() {
-		return ($this.TurnList.Add("$($this.CurrentSpot[0])-$($this.CurrentSpot[1])-$($this.Direction)"))
+	[bool] UpdateMoveList() {
+		return ($this.MoveList.Add("$($this.CurrentSpot[0])-$($this.CurrentSpot[1])-$($this.Direction)"))
 	}
 
 	[int[]] GetNextCoordinate() {
@@ -108,15 +108,15 @@ class Lab {
 			return
 		}
 
-		if ($this.IsObstructed($this.Guard.GetNextCoordinate())) {
+		while ($this.IsObstructed($this.Guard.GetNextCoordinate())) {
 			$this.Guard.TurnRight()
-			if (-NOT ($this.Guard.UpdateTurnList())) {
-				$this.RouteOutcome = "Infinite Loop"
-				return
-			}
 		}
 
 		$this.Guard.MoveForward()
+		if (-NOT ($this.Guard.UpdateMoveList())) {
+			$this.RouteOutcome = "Infinite Loop"
+			return
+		}
 		$newSpot = $this.GetGuardPosition()
 		$this.Map[$newSpot[0]][$newSpot[1]] = [Guard]::GetMapSymbol($this.Guard.Direction)
 	}
@@ -160,11 +160,7 @@ function SolveProblem12 {
 		}
 		Write-Debug "Guard position: $($testLab.GetGuardPosition())"
 		if ($testLab.RouteOutcome -eq "Infinite Loop") {
-			Write-Information "Infinite Loop detected." -InformationAction Continue
 			$sum++
-			Write-Debug "Sum: $sum"
-		} elseif ($testLab.GetGuardPosition() -notcontains 0 -and $testLab.GetGuardPosition() -notcontains ($testLab.Map.Length - 1)) {
-			Write-Warning "Something is off with the detection. No infinite loop detected, but the guard didn't leave the lab."
 		}
 	}
 
