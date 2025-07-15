@@ -1,11 +1,12 @@
+using namespace System.Collections.Generic
 param(
 	$inputPath
 )
 
 $fullData = Get-Content $inputPath
 
-$ListA = New-Object System.Collections.Generic.List[int]
-$ListB = New-Object System.Collections.Generic.List[int]
+$ListA = New-Object List[int]
+$ListB = New-Object List[int]
 
 $fullData | ForEach-Object {
 	$_ -match "(\d+)\s+(\d+)" | Out-Null
@@ -13,16 +14,28 @@ $fullData | ForEach-Object {
 	$ListB.Add($Matches[2])
 }
 
-$sortedListA = $ListA | Sort-Object
-$sortedListB = $ListB | Sort-Object
-
-$score = 0
-
-for ($i = 0; $i -lt $sortedListA.count; $i++) {
-	$multiplier = ($sortedListB | Where-Object {
-		$_ -eq $sortedListA[$i]
-	}).count
-	$score += ($sortedListA[$i] * $multiplier)
+$ListACounts = @{}
+$ListA | Group-Object | ForEach-Object {
+	$ListACounts[$_.Name] = $_.Count
 }
 
-$score
+$ListBCounts = @{}
+$ListB | Group-Object | ForEach-Object {
+	$ListBCounts[$_.Name] = $_.Count
+}
+
+$compareParams = @{
+	ReferenceObject = [array]$ListACounts.Keys
+	DifferenceObject = [array]$ListBCounts.Keys
+	ExcludeDifferent = $true
+}
+
+$listComparison = Compare-Object @compareParams
+
+$score = ($ListACounts.GetEnumerator() | Where-Object {
+		$listComparison.InputObject -contains $_.Key
+	} | ForEach-Object {
+		[int]$_.Key * [int]$ListBCounts.($_.Key) * [int]$_.Value
+	} | Measure-Object -Sum).Sum
+
+return $score
